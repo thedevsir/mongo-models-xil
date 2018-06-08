@@ -3,7 +3,6 @@ const Hoek = require('hoek');
 const Joi = require('joi');
 const Mongodb = require('mongodb');
 
-
 const argsFromArguments = function (argumentz) {
 
     const args = new Array(argumentz.length);
@@ -14,7 +13,6 @@ const argsFromArguments = function (argumentz) {
 
     return args;
 };
-
 
 const dbFromArgs = function (args) {
 
@@ -27,8 +25,8 @@ const dbFromArgs = function (args) {
     return db;
 };
 
-
 class MongoModels {
+
     constructor(data) {
 
         const result = this.constructor.validate(data);
@@ -40,7 +38,6 @@ class MongoModels {
         Object.assign(this, result.value);
     }
 
-
     static aggregate() {
 
         const args = argsFromArguments(arguments);
@@ -50,7 +47,6 @@ class MongoModels {
         return collection.aggregate.apply(collection, args).toArray();
     }
 
-
     static collection() {
 
         const args = argsFromArguments(arguments);
@@ -58,7 +54,6 @@ class MongoModels {
 
         return db.collection(this.collectionName);
     }
-
 
     static async connect(connection, options = {}, name = 'default') {
 
@@ -70,7 +65,6 @@ class MongoModels {
         return MongoModels.dbs[name];
     }
 
-
     static count() {
 
         const args = argsFromArguments(arguments);
@@ -79,7 +73,6 @@ class MongoModels {
 
         return collection.count.apply(collection, args);
     }
-
 
     static createIndexes() {
 
@@ -90,7 +83,6 @@ class MongoModels {
         return collection.createIndexes.apply(collection, args);
     }
 
-
     static deleteMany() {
 
         const args = argsFromArguments(arguments);
@@ -100,7 +92,6 @@ class MongoModels {
         return collection.deleteMany.apply(collection, args);
     }
 
-
     static deleteOne() {
 
         const args = argsFromArguments(arguments);
@@ -109,7 +100,6 @@ class MongoModels {
 
         return collection.deleteOne.apply(collection, args);
     }
-
 
     static disconnect(name) {
 
@@ -133,7 +123,6 @@ class MongoModels {
         MongoModels.clients[name].close();
     }
 
-
     static distinct() {
 
         const args = argsFromArguments(arguments);
@@ -142,7 +131,6 @@ class MongoModels {
 
         return collection.distinct.apply(collection, args);
     }
-
 
     static fieldsAdapter(fields) {
 
@@ -167,7 +155,6 @@ class MongoModels {
         return fields;
     }
 
-
     static async find() {
 
         const args = argsFromArguments(arguments);
@@ -177,7 +164,6 @@ class MongoModels {
 
         return this.resultFactory(result);
     }
-
 
     static async findById() {
 
@@ -194,7 +180,6 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static async findByIdAndDelete() {
 
         const args = argsFromArguments(arguments);
@@ -208,7 +193,6 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static async findByIdAndUpdate() {
 
         const args = argsFromArguments(arguments);
@@ -219,13 +203,21 @@ class MongoModels {
         const defaultOptions = {
             returnOriginal: false
         };
+
+        if (!update.$set && !update.createdAt) {
+            update.createdAt = new Date();
+        }
+
+        if (!update.$set && !update.updatedAt || update.$set && !update.$set.updatedAt) {
+            update.updatedAt = new Date();
+        }
+
         const options = Hoek.applyToDefaults(defaultOptions, args.pop() || {});
         const filter = { _id: this._idClass(id) };
         const result = await collection.findOneAndUpdate(filter, update, options);
 
         return this.resultFactory(result);
     }
-
 
     static async findOne() {
 
@@ -237,7 +229,6 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static async findOneAndDelete() {
 
         const args = argsFromArguments(arguments);
@@ -247,7 +238,6 @@ class MongoModels {
 
         return this.resultFactory(result);
     }
-
 
     static async findOneAndReplace() {
 
@@ -261,6 +251,16 @@ class MongoModels {
         };
         const options = Hoek.applyToDefaults(defaultOptions, args.pop() || {});
 
+        {
+            if (!doc.createdAt) {
+                doc.createdAt = new Date();
+            }
+
+            if (!doc.updatedAt) {
+                doc.updatedAt = new Date();
+            }
+        }
+
         args.push(filter);
         args.push(doc);
         args.push(options);
@@ -269,7 +269,6 @@ class MongoModels {
 
         return this.resultFactory(result);
     }
-
 
     static async findOneAndUpdate() {
 
@@ -283,6 +282,14 @@ class MongoModels {
         };
         const options = Hoek.applyToDefaults(defaultOptions, args.pop() || {});
 
+        if (!doc.$set && !doc.createdAt) {
+            doc.createdAt = new Date();
+        }
+
+        if (!doc.$set && !doc.updatedAt || doc.$set && !doc.$set.updatedAt) {
+            doc.updatedAt = new Date();
+        }
+
         args.push(filter);
         args.push(doc);
         args.push(options);
@@ -292,10 +299,21 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static async insertMany() {
 
         const args = argsFromArguments(arguments);
+
+        args[0].forEach((document) => {
+
+            if (!document.createdAt) {
+                document.createdAt = new Date();
+            }
+
+            if (!document.updatedAt) {
+                document.updatedAt = new Date();
+            }
+        })
+
         const db = dbFromArgs(args);
         const collection = db.collection(this.collectionName);
         const result = await collection.insertMany.apply(collection, args);
@@ -303,17 +321,26 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static async insertOne() {
 
         const args = argsFromArguments(arguments);
+
+        {
+            if (!args[0].createdAt) {
+                args[0].createdAt = new Date();
+            }
+
+            if (!args[0].updatedAt) {
+                args[0].updatedAt = new Date();
+            }
+        }
+
         const db = dbFromArgs(args);
         const collection = db.collection(this.collectionName);
         const result = await collection.insertOne.apply(collection, args);
 
         return this.resultFactory(result);
     }
-
 
     static async pagedFind() {
 
@@ -369,7 +396,6 @@ class MongoModels {
         return output;
     }
 
-
     static async replaceOne() {
 
         const args = argsFromArguments(arguments);
@@ -379,6 +405,16 @@ class MongoModels {
         const doc = args.shift();
         const options = Hoek.applyToDefaults({}, args.pop() || {});
 
+        {
+            if (!doc.createdAt) {
+                doc.createdAt = new Date();
+            }
+
+            if (!doc.updatedAt) {
+                doc.updatedAt = new Date();
+            }
+        }
+
         args.push(filter);
         args.push(doc);
         args.push(options);
@@ -387,7 +423,6 @@ class MongoModels {
 
         return this.resultFactory(result);
     }
-
 
     static resultFactory(result) {
 
@@ -423,7 +458,6 @@ class MongoModels {
         return result;
     }
 
-
     static sortAdapter(sorts) {
 
         if (Object.prototype.toString.call(sorts) === '[object String]') {
@@ -447,7 +481,6 @@ class MongoModels {
         return sorts;
     }
 
-
     static async updateMany() {
 
         const args = argsFromArguments(arguments);
@@ -456,6 +489,12 @@ class MongoModels {
         const filter = args.shift();
         const update = args.shift();
         const options = Hoek.applyToDefaults({}, args.pop() || {});
+
+        {
+            if (!update.$set.updatedAt) {
+                update.$set.updatedAt = new Date();
+            }
+        }
 
         args.push(filter);
         args.push(update);
@@ -466,7 +505,6 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static async updateOne() {
 
         const args = argsFromArguments(arguments);
@@ -475,6 +513,12 @@ class MongoModels {
         const filter = args.shift();
         const update = args.shift();
         const options = Hoek.applyToDefaults({}, args.pop() || {});
+
+        {
+            if (!update.$set.updatedAt) {
+                update.$set.updatedAt = new Date();
+            }
+        }
 
         args.push(filter);
         args.push(update);
@@ -485,18 +529,20 @@ class MongoModels {
         return this.resultFactory(result);
     }
 
-
     static validate(input) {
 
-        return Joi.validate(input, this.schema);
-    }
+        const infrastructure = this.schema.append({
+            createdAt: Joi.date(),
+            updatedAt: Joi.date(),
+        });
 
+        return Joi.validate(input, infrastructure);
+    }
 
     validate() {
 
         return Joi.validate(this, this.constructor.schema);
     }
-
 
     static with(name) {
 
@@ -537,11 +583,9 @@ class MongoModels {
     }
 }
 
-
 MongoModels._idClass = Mongodb.ObjectID;
 MongoModels.ObjectId = MongoModels.ObjectID = Mongodb.ObjectID;
 MongoModels.clients = {};
 MongoModels.dbs = {};
-
 
 module.exports = MongoModels;

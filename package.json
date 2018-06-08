@@ -1,5 +1,5 @@
 {
-  "name": "mongo-models",
+  "name": "mongo-models-xil",
   "version": "2.0.3",
   "description": "JavaScript class interfaces to MongoDB collections",
   "main": "index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:jedireza/mongo-models.git"
+    "url": "git@github.com:escommunity/mongo-models-xil.git"
   },
   "keywords": [
     "mongo",
@@ -25,9 +25,9 @@
   "author": "Reza Akhavan <reza@akhavan.me>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jedireza/mongo-models/issues"
+    "url": "https://github.com/escommunity/mongo-models-xil/issues"
   },
-  "homepage": "https://github.com/jedireza/mongo-models",
+  "homepage": "https://github.com/escommunity/mongo-models-xil",
   "devDependencies": {
     "body-parser": "1.x.x",
     "code": "5.x.x",
@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "hoek": "5.x.x",
-    "joi": "13.x.x"
+    "joi": "13.x.x",
+    "joistick": "^1.0.1"
   }
 }
